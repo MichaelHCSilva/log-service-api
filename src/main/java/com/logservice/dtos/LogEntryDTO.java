@@ -1,18 +1,21 @@
 package com.logservice.dtos;
 
+import java.util.Map;
+
 import com.logservice.enums.LogLevel;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 
 public class LogEntryDTO {
 
-    @NotBlank(message = "Log level is required")
+    @NotNull(message = "Log level is required")
     private LogLevel level;
 
-    @NotBlank(message = "Message is required")
+    @NotNull(message = "Message is required")
     private String message;
 
-    private String additionalData;
+    private Map<String, Object> additionalData;
 
     public LogLevel getLevel() {
         return level;
@@ -30,11 +33,11 @@ public class LogEntryDTO {
         this.message = message;
     }
 
-    public String getAdditionalData() {
+    public Map<String, Object> getAdditionalData() {
         return additionalData;
     }
 
-    public void setAdditionalData(String additionalData) {
+    public void setAdditionalData(Map<String, Object> additionalData) {
         this.additionalData = additionalData;
     }
 }
