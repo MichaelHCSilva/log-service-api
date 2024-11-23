@@ -1,14 +1,17 @@
 package com.logservice.services;
 
-import com.logservice.dtos.LogEntryDTO;
-import com.logservice.models.LogEntry;
-import com.logservice.repositories.LogRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import java.time.ZonedDateTime;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import java.time.ZonedDateTime;
+import com.logservice.dtos.LogEntryDTO;
+import com.logservice.enums.LogLevel;
+import com.logservice.models.LogEntry;
+import com.logservice.repositories.LogRepository;
 
 @Service
 public class LogService {
@@ -26,9 +29,8 @@ public class LogService {
         log.setMessage(logEntryDTO.getMessage());
         logger.debug("Log básico criado com level: {} e mensagem: {}", logEntryDTO.getLevel(), logEntryDTO.getMessage());
 
-        // Verifica e atribui os dados adicionais
         if (logEntryDTO.getAdditionalData() != null) {
-            log.setAdditionalData(logEntryDTO.getAdditionalData()); // Atribui o mapa diretamente
+            log.setAdditionalData(logEntryDTO.getAdditionalData());
             logger.debug("Dados adicionais atribuídos: {}", logEntryDTO.getAdditionalData());
         } else {
             logger.debug("Nenhum dado adicional fornecido.");
@@ -37,9 +39,20 @@ public class LogService {
         log.setTimestamp(ZonedDateTime.now());
         logger.info("Timestamp gerado automaticamente: {}", log.getTimestamp());
 
-        // Salva o log no banco de dados
         LogEntry savedLog = logRepository.save(log);
         logger.info("Log salvo com sucesso no banco de dados. ID: {}", savedLog.getId());
         return savedLog;
+    }
+
+    public List<LogEntry> getLogs(LogLevel level) {
+        if (level != null) {
+            return logRepository.findByLevel(level);
+        }
+        return logRepository.findAll();
+    }
+
+    public LogEntry getLogById(Long id) {
+        return logRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Log não encontrado com ID: " + id));
     }
 }

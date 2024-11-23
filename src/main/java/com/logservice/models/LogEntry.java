@@ -1,12 +1,19 @@
 package com.logservice.models;
 
-import jakarta.persistence.*;
-
 import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.UUID;
 
 import com.logservice.enums.LogLevel;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 @Entity
 public class LogEntry {
@@ -26,7 +33,6 @@ public class LogEntry {
 
     private ZonedDateTime timestamp;
 
-    // Getters e setters
     public UUID getId() {
         return id;
     }
