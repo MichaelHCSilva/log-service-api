@@ -25,7 +25,6 @@ public class AdditionalDataConverter implements AttributeConverter<Map<String, O
     @Override
     public Map<String, Object> convertToEntityAttribute(String dbData) {
         try {
-            // Uso de TypeReference para mapear tipos genéricos
             return objectMapper.readValue(dbData, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
             });
         } catch (IOException e) {

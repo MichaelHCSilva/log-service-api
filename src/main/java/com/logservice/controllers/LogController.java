@@ -1,5 +1,6 @@
 package com.logservice.controllers;
 
+import java.net.URI;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.logservice.dtos.LogEntryDTO;
 import com.logservice.enums.LogLevel;
@@ -38,7 +40,14 @@ public class LogController {
         LogEntry savedLog = logService.saveLog(logEntryDTO);
 
         logger.info("Log salvo com sucesso. ID: {}", savedLog.getId());
-        return ResponseEntity.ok(savedLog);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedLog.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(savedLog);
     }
 
     @GetMapping
