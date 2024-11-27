@@ -19,11 +19,11 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final ConcurrentHashMap<String, String> users = new ConcurrentHashMap<>();
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public CustomUserDetailsService() {
-        String encodedPassword = passwordEncoder.encode("password");
-        users.put("admin", encodedPassword);
-        logger.info("Usuário inicial criado: admin, senha criptografada: {}", encodedPassword);
-    }
+    //public CustomUserDetailsService() {
+    //    String encodedPassword = passwordEncoder.encode("password");
+    //    users.put("admin", encodedPassword);
+    //    logger.info("Usuário inicial criado: admin, senha criptografada: {}", encodedPassword);
+    //}
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

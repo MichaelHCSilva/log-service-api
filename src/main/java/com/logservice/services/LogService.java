@@ -2,6 +2,7 @@ package com.logservice.services;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,22 +46,31 @@ public class LogService {
     }
 
     public List<LogEntry> getLogs(LogLevel level, OffsetDateTime startDate, OffsetDateTime endDate) {
-    if (level != null) {
-        if (startDate != null && endDate != null) {
-            return logRepository.findLogsByLevelAndDateRange(level, startDate, endDate);
-        } else {
-            return logRepository.findByLevel(level);
+        if (level != null) {
+            if (startDate != null && endDate != null) {
+                return logRepository.findLogsByLevelAndDateRange(level, startDate, endDate);
+            } else {
+                return logRepository.findByLevel(level);
+            }
         }
+        if (startDate != null && endDate != null) {
+            return logRepository.findLogsByDateRange(startDate, endDate);
+        }
+        return logRepository.findAll();
     }
-    if (startDate != null && endDate != null) {
-        return logRepository.findLogsByDateRange(startDate, endDate);
+
+    public void deleteLogById(UUID id) {
+        logger.info("Verificando se o log com ID {} existe...", id);
+
+        if (!logRepository.existsById(id)) {
+            logger.error("Log com ID {} não encontrado.", id);
+            throw new IllegalArgumentException("Log não encontrado para o ID: " + id);
+        }
+
+        logRepository.deleteById(id);
+        logger.info("Log com ID {} removido do banco de dados.", id);
     }
-    return logRepository.findAll();
+
+               
 }
 
-
-    public LogEntry getLogById(Long id) {
-        return logRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Log não encontrado com ID: " + id));
-    }
-}

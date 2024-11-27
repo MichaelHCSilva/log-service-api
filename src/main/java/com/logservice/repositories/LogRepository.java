@@ -2,6 +2,7 @@ package com.logservice.repositories;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -10,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import com.logservice.enums.LogLevel;
 import com.logservice.models.LogEntry;
 
-public interface LogRepository extends JpaRepository<LogEntry, Long> {
+public interface LogRepository extends JpaRepository<LogEntry, UUID> {
 
     List<LogEntry> findByLevel(LogLevel level);
 

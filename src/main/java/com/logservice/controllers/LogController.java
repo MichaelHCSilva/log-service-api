@@ -3,14 +3,17 @@ package com.logservice.controllers;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+//import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,9 +57,9 @@ public class LogController {
 
     @GetMapping
     public ResponseEntity<List<LogEntry>> getLogs(
-        @RequestParam(required = false) LogLevel level,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startDate,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endDate) {
+            @RequestParam(required = false) LogLevel level,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endDate) {
         logger.info("Buscando logs. Filtro de nível: {}", level);
 
         List<LogEntry> logs = logService.getLogs(level, startDate, endDate);
@@ -65,18 +68,13 @@ public class LogController {
         return ResponseEntity.ok(logs);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<LogEntry> getLogById(@PathVariable Long id) {
-        logger.info("Buscando log pelo ID: {}", id);
-
-        LogEntry logEntry = logService.getLogById(id);
-
-        if (logEntry != null) {
-            logger.info("Log encontrado com sucesso. ID: {}", id);
-        } else {
-            logger.warn("Log não encontrado com o ID: {}", id);
-        }
-
-        return ResponseEntity.ok(logEntry);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLog(@PathVariable UUID id) {
+        logger.info("Requisição para deletar log com ID: {}", id);
+        logService.deleteLogById(id);
+        logger.info("Log com ID {} deletado com sucesso.", id);
+        return ResponseEntity.noContent().build();
     }
+
+    
 }
