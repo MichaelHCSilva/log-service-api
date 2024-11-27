@@ -31,44 +31,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-        throws ServletException, java.io.IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, java.io.IOException {
 
-    String authorizationHeader = request.getHeader("Authorization");
-    log.info("Authorization header: {}", authorizationHeader);
+        String authorizationHeader = request.getHeader("Authorization");
+        log.info("Cabeçalho de autorização: {}", authorizationHeader);
 
-    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-        logger.warn("Authorization header missing or invalid");
-        filterChain.doFilter(request, response);
-        return;
-    }
-
-    String token = authorizationHeader.substring(7);
-    log.info("Extracted token: {}", token);
-
-    try {
-        String username = jwtService.extractUsername(token);
-        log.info("Extracted username: {}", username);
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            log.info("Loaded UserDetails for: {}", username);
-
-            if (jwtService.validateToken(token, userDetails.getUsername())) {
-                log.info("Token validated successfully for: {}", username);
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-            } else {
-                log.warn("Token validation failed for: {}", username);
-            }
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            log.warn("Cabeçalho de autorização ausente ou inválido");
+            filterChain.doFilter(request, response);
+            return;
         }
-    } catch (JwtException e) {
-        log.error("JWT validation failed: {}", e.getMessage(), e);
-    }
 
-    filterChain.doFilter(request, response);
-}
+        String token = authorizationHeader.substring(7);
+        log.info("Token extraído: {}", token);
+
+        try {
+            String username = jwtService.extractUsername(token);
+            log.info("Usuário extraído do token: {}", username);
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                log.info("Detalhes do usuário carregados para: {}", username);
+
+                if (jwtService.validateToken(token, userDetails.getUsername())) {
+                    log.info("Token validado com sucesso para: {}", username);
+                    UsernamePasswordAuthenticationToken authenticationToken
+                            = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                } else {
+                    log.warn("Falha na validação do token para: {}", username);
+                }
+            }
+        } catch (JwtException e) {
+            log.error("Falha na validação do JWT: {}", e.getMessage(), e);
+        }
+
+        filterChain.doFilter(request, response);
+    }
 
 }

@@ -1,6 +1,6 @@
 package com.logservice.services;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ public class LogService {
             logger.debug("Nenhum dado adicional fornecido.");
         }
 
-        log.setTimestamp(ZonedDateTime.now());
+        log.setTimestamp(OffsetDateTime.now());
         logger.info("Timestamp gerado automaticamente: {}", log.getTimestamp());
 
         LogEntry savedLog = logRepository.save(log);
@@ -44,12 +44,20 @@ public class LogService {
         return savedLog;
     }
 
-    public List<LogEntry> getLogs(LogLevel level) {
-        if (level != null) {
+    public List<LogEntry> getLogs(LogLevel level, OffsetDateTime startDate, OffsetDateTime endDate) {
+    if (level != null) {
+        if (startDate != null && endDate != null) {
+            return logRepository.findLogsByLevelAndDateRange(level, startDate, endDate);
+        } else {
             return logRepository.findByLevel(level);
         }
-        return logRepository.findAll();
     }
+    if (startDate != null && endDate != null) {
+        return logRepository.findLogsByDateRange(startDate, endDate);
+    }
+    return logRepository.findAll();
+}
+
 
     public LogEntry getLogById(Long id) {
         return logRepository.findById(id)

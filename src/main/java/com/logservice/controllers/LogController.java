@@ -1,11 +1,13 @@
 package com.logservice.controllers;
 
 import java.net.URI;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,10 +53,13 @@ public class LogController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LogEntry>> getLogs(@RequestParam(required = false) LogLevel level) {
+    public ResponseEntity<List<LogEntry>> getLogs(
+        @RequestParam(required = false) LogLevel level,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startDate,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endDate) {
         logger.info("Buscando logs. Filtro de nível: {}", level);
 
-        List<LogEntry> logs = logService.getLogs(level);
+        List<LogEntry> logs = logService.getLogs(level, startDate, endDate);
 
         logger.info("Total de logs encontrados: {}", logs.size());
         return ResponseEntity.ok(logs);

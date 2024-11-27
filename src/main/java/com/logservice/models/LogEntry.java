@@ -1,6 +1,6 @@
 package com.logservice.models;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -31,7 +31,8 @@ public class LogEntry {
     @Convert(converter = AdditionalDataConverter.class)
     private Map<String, Object> additionalData;
 
-    private ZonedDateTime timestamp;
+    // Alteração para OffsetDateTime
+    private OffsetDateTime timestamp;
 
     public UUID getId() {
         return id;
@@ -65,11 +66,11 @@ public class LogEntry {
         this.additionalData = additionalData;
     }
 
-    public ZonedDateTime getTimestamp() {
+    public OffsetDateTime getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(ZonedDateTime timestamp) {
+    public void setTimestamp(OffsetDateTime timestamp) {
         this.timestamp = timestamp;
     }
 }
