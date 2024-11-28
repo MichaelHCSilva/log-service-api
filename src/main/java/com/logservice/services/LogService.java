@@ -25,6 +25,19 @@ public class LogService {
     public LogEntry saveLog(LogEntryDTO logEntryDTO) {
         logger.info("Iniciando o processo de salvar log...");
 
+        if (logEntryDTO.getLevel() == null) {
+            throw new IllegalArgumentException("Nível de log é obrigatório.");
+        }
+
+        if (logEntryDTO.getMessage() == null || logEntryDTO.getMessage().isEmpty()) {
+            throw new IllegalArgumentException("Mensagem de log é obrigatória.");
+        }
+
+        int maxMessageSize = 10000; 
+        if (logEntryDTO.getMessage() != null && logEntryDTO.getMessage().length() > maxMessageSize) {
+            throw new IllegalArgumentException("A mensagem de log excede o tamanho máximo permitido de " + maxMessageSize + " caracteres.");
+        }
+
         LogEntry log = new LogEntry();
         log.setLevel(logEntryDTO.getLevel());
         log.setMessage(logEntryDTO.getMessage());
@@ -71,6 +84,4 @@ public class LogService {
         logger.info("Log com ID {} removido do banco de dados.", id);
     }
 
-               
 }
-
