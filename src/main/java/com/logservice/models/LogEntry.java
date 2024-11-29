@@ -31,7 +31,6 @@ public class LogEntry {
     @Convert(converter = AdditionalDataConverter.class)
     private Map<String, Object> additionalData;
 
-    // Alteração para OffsetDateTime
     private OffsetDateTime timestamp;
 
     public UUID getId() {

@@ -35,7 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, java.io.IOException {
 
         String authorizationHeader = request.getHeader("Authorization");
-        log.info("Cabeçalho de autorização: {}", authorizationHeader);
+        log.info("Cabeçalho de autorização recebido: {}", authorizationHeader);
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             log.warn("Cabeçalho de autorização ausente ou inválido");
@@ -44,31 +44,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = authorizationHeader.substring(7);
-        log.info("Token extraído: {}", token);
 
         try {
             String username = jwtService.extractUsername(token);
-            log.info("Usuário extraído do token: {}", username);
+            log.info("Token validado para usuário: {}", username);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                log.info("Detalhes do usuário carregados para: {}", username);
 
                 if (jwtService.validateToken(token, userDetails.getUsername())) {
-                    log.info("Token validado com sucesso para: {}", username);
-                    UsernamePasswordAuthenticationToken authenticationToken
-                            = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.info("Autenticação bem-sucedida para: {}", username);
                 } else {
-                    log.warn("Falha na validação do token para: {}", username);
+                    log.warn("Falha na validação do token");
                 }
             }
         } catch (JwtException e) {
-            log.error("Falha na validação do JWT: {}", e.getMessage(), e);
+            log.error("Erro ao validar o token JWT: {}", e.getMessage(), e);
         }
 
         filterChain.doFilter(request, response);
     }
-
 }

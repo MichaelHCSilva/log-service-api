@@ -1,4 +1,4 @@
-package com.logservice.controllers;
+package com.logservice.requests;
 
 public class AuthRequest {
     private String username;

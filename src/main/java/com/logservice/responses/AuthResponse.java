@@ -1,4 +1,4 @@
-package com.logservice.controllers;
+package com.logservice.responses;
 
 import java.util.regex.Pattern;
 

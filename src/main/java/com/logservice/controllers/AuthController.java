@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.logservice.requests.AuthRequest;
+import com.logservice.responses.AuthResponse;
 import com.logservice.services.CustomUserDetailsService;
 import com.logservice.services.JwtService;
 
