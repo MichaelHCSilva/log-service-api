@@ -22,18 +22,15 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimitingFilter.class);
 
-    private static final long MAX_REQUESTS = 5; // Número máximo de requisições permitidas por intervalo
-    private static final Duration REFILL_DURATION = Duration.ofMinutes(1); // Tempo para renovar os tokens
+    private static final long MAX_REQUESTS = 5;
+    private static final Duration REFILL_DURATION = Duration.ofMinutes(1);
     private final ConcurrentMap<String, Bucket> buckets = new ConcurrentHashMap<>();
 
-    /**
-     * Resolve o bucket associado ao endereço IP. Se não existir, cria um novo.
-     */
     private Bucket resolveBucket(String ipAddress) {
-        return buckets.computeIfAbsent(ipAddress, k -> 
-            Bucket.builder()
-                    .addLimit(Bandwidth.classic(MAX_REQUESTS, Refill.intervally(MAX_REQUESTS, REFILL_DURATION)))
-                    .build()
+        return buckets.computeIfAbsent(ipAddress, k
+                -> Bucket.builder()
+                        .addLimit(Bandwidth.classic(MAX_REQUESTS, Refill.intervally(MAX_REQUESTS, REFILL_DURATION)))
+                        .build()
         );
     }
 
@@ -41,12 +38,11 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, java.io.IOException {
 
-        String clientIp = request.getRemoteAddr(); // Obtém o endereço IP do cliente
+        String clientIp = request.getRemoteAddr();
         log.info("Requisição recebida de IP: {}", clientIp);
 
         Bucket bucket = resolveBucket(clientIp);
 
-        // Verifica se ainda há tokens disponíveis no bucket
         if (bucket.tryConsume(1)) {
             long remainingTokens = bucket.getAvailableTokens();
             log.info("Requisição permitida para IP: {}. Requisições restantes: {}", clientIp, remainingTokens);
@@ -55,8 +51,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             long waitTimeMillis = REFILL_DURATION.toMillis();
             log.warn("Limite de requisições atingido para IP: {}. Tempo de espera estimado: {} ms.", clientIp, waitTimeMillis);
 
-            // Configura a resposta HTTP para indicar limite atingido
-            response.setStatus(429); // Status HTTP "Too Many Requests"
+            response.setStatus(429);
             response.setContentType("application/json");
             response.getWriter().write("{\"erro\": \"Limite de requisições atingido. Por favor, aguarde " + waitTimeMillis + " ms antes de tentar novamente.\"}");
             response.getWriter().flush();

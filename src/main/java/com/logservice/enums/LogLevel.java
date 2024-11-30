@@ -1,10 +1,10 @@
 package com.logservice.enums;
 
 public enum LogLevel {
-    INFO("Informational message"),
-    WARNING("Potential issue or important notice"),
-    ERROR("An error occurred"),
-    DEBUG("Debugging message");
+    INFO("Mensagem informativa"),
+    WARNING("Aviso sobre um possível problema ou nota importante"),
+    ERROR("Um erro ocorreu"),
+    DEBUG("Mensagem de depuração");
 
     private final String description;
 

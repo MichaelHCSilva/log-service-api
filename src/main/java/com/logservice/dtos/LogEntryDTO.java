@@ -10,10 +10,10 @@ import jakarta.validation.constraints.NotNull;
 
 public class LogEntryDTO {
 
-    @NotNull
+    @NotNull(message = "O nível de log é obrigatório.")
     private LogLevel level;
 
-    @NotBlank
+    @NotBlank(message = "A mensagem de log é obrigatória e não pode estar em branco.")
     private String message;
 
     private Map<String, Object> additionalData;
