@@ -16,10 +16,6 @@ import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Tratamento de erros de validação em DTOs (anotações como @NotNull,
-     * @NotBlank, etc.)
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationException(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -31,10 +27,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
 
-    /**
-     * Tratamento de erros relacionados à desserialização de JSON (campos
-     * inválidos ou vazios).
-     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleJsonParsingException(HttpMessageNotReadableException ex) {
         Map<String, String> error = new HashMap<>();
@@ -43,7 +35,6 @@ public class GlobalExceptionHandler {
         if (cause != null) {
             switch (cause) {
                 case InvalidFormatException invalidFormatException -> {
-                    // Para valores inválidos no campo 'level'
                     String fieldName = invalidFormatException.getPath().isEmpty()
                             ? "unknown"
                             : invalidFormatException.getPath().get(0).getFieldName();
@@ -57,7 +48,6 @@ public class GlobalExceptionHandler {
                     }
                 }
                 case ValueInstantiationException valueInstantiationException -> {
-                    // Para valores vazios no campo 'level'
                     String fieldName = valueInstantiationException.getPath().isEmpty()
                             ? "unknown"
                             : valueInstantiationException.getPath().get(0).getFieldName();
@@ -67,11 +57,10 @@ public class GlobalExceptionHandler {
                 }
                 default -> {
                     error.put("error", "Erro ao processar o JSON enviado.");
-                    error.put("details", cause.getMessage());  // Use cause's message if needed
+                    error.put("details", cause.getMessage());
                 }
             }
         } else {
-            // In case the cause is null, we default to a generic message
             error.put("error", "Erro ao processar o JSON enviado.");
             error.put("details", ex.getMessage());
         }
@@ -79,9 +68,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    /**
-     * Tratamento genérico para outras exceções não previstas.
-     */
+    
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
         Map<String, String> error = new HashMap<>();

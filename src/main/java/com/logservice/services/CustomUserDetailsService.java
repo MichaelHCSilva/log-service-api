@@ -24,24 +24,24 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        validateUsername(username);
-        logger.info("carregando usuário: {}", username);
+        validateField(username, "Usuário", 3, 50);
+        logger.info("Carregando usuário: {}", username);
 
         String password = users.get(username);
-        if (password != null) {
-            logger.info("Usuário encontrado: {}", username);
-            return User.withUsername(username)
-                    .password(password)
-                    .roles("USER")
-                    .build();
+        if (password == null) {
+            logger.warn("Usuário não encontrado: {}", username);
+            throw new UsernameNotFoundException("Usuário não encontrado.");
         }
 
-        logger.warn("Usuário não encontrado: {}", username);
-        throw new UsernameNotFoundException("Usuário não encontrado: " + username);
+        logger.info("Usuário encontrado: {}", username);
+        return User.withUsername(username)
+                .password(password)
+                .roles("USER")
+                .build();
     }
 
     public void registerUser(String username, String password) {
-        validateUsername(username);
+        validateField(username, "Usuário", 3, 50);
         validatePassword(password);
 
         logger.info("Registrando novo usuário: {}", username);
@@ -57,7 +57,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     public boolean authenticateUser(String username, String password) {
-        validateUsername(username);
+        validateField(username, "Usuário", 3, 50);
+        validateField(password, "Senha", 6, 100);
 
         AtomicInteger attempts = loginAttempts.computeIfAbsent(username, k -> new AtomicInteger(0));
         if (attempts.get() >= MAX_ATTEMPTS) {
@@ -76,26 +77,37 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         logger.warn("Falha na autenticação para usuário: {}", username);
         attempts.incrementAndGet();
-        return false;
+        throw new IllegalArgumentException("Usuário ou senha incorretos.");
     }
 
-    private void validateUsername(String username) {
-        if (username == null || username.isBlank()) {
-            throw new IllegalArgumentException("O nome de usuário não pode ser nulo ou vazio.");
+    /**
+     * Valida um campo genérico, como nome de usuário ou senha, verificando nulidade, vazio e limites de caracteres.
+     *
+     * @param field     O valor do campo a ser validado.
+     * @param fieldName O nome do campo para exibir em mensagens de erro.
+     * @param minLength O comprimento mínimo permitido.
+     * @param maxLength O comprimento máximo permitido.
+     */
+    private void validateField(String field, String fieldName, int minLength, int maxLength) {
+        if (field == null || field.isBlank()) {
+            throw new IllegalArgumentException(fieldName + " não pode ser nulo ou vazio.");
         }
 
-        if (username.length() < 3 || username.length() > 20) {
-            throw new IllegalArgumentException("O nome de usuário deve ter entre 3 e 20 caracteres.");
+        if (field.length() < minLength) {
+            throw new IllegalArgumentException(fieldName + " deve ter pelo menos " + minLength + " caracteres.");
+        }
+
+        if (field.length() > maxLength) {
+            throw new IllegalArgumentException(fieldName + " não pode ter mais que " + maxLength + " caracteres.");
         }
     }
 
+    /**
+     * Valida os critérios de senha.
+     *
+     * @param password A senha a ser validada.
+     */
     private void validatePassword(String password) {
-        if (password == null || password.isBlank()) {
-            throw new IllegalArgumentException("A senha não pode ser nula ou vazia.");
-        }
-
-        if (password.length() < 6) {
-            throw new IllegalArgumentException("A senha deve ter pelo menos 6 caracteres.");
-        }
+        validateField(password, "Senha", 6, 100);
     }
 }
