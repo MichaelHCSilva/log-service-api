@@ -1,9 +1,14 @@
+# Imagem base do Java
 FROM openjdk:21-jdk-slim
 
+# Define o diretório de trabalho
 WORKDIR /app
 
-COPY target/log-service-api-0.0.1-SNAPSHOT.jar log-service-api.jar
+# Copia o arquivo JAR da aplicação para o container
+COPY target/log-service.jar app.jar
 
+# Expõe a porta que sua API usa
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "log-service-api.jar"]
+# Comando para rodar a aplicação
+ENTRYPOINT ["java", "-jar", "app.jar"]

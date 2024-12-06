@@ -1,28 +1,50 @@
 version: "3.8"
 services:
   postgres:
-    image: postgres:13
-    container_name: postgres-db
+    image: postgres:15
+    container_name: postgres-logs
     environment:
-      POSTGRES_DB: log-service
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
+      POSTGRES_DB: log-service
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pg-data:/var/lib/postgresql/data
 
-  log-service-api:
-    build: .
-    container_name: log-service-api
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/log-service
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: admin
+  logs-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: logs-api-container
     ports:
       - "8080:8080"
     depends_on:
       - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/log-service
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-container
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_DATABASE_HOST: postgres:5432
+      GF_DATABASE_NAME: log-service
+      GF_DATABASE_USER: postgres
+      GF_DATABASE_PASSWORD: admin
+    volumes:
+      - logs-data:/var/lib/grafana
 
 volumes:
-  postgres_data:
+  pg-data:
+  logs-data:
+  
+
