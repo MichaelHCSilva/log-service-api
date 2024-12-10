@@ -2,7 +2,9 @@ package com.logservice.controllers;
 
 import java.net.URI;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -59,20 +61,42 @@ public class LogController {
             @RequestParam(required = false) LogLevel level,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endDate) {
-        logger.info("Buscando logs. Filtro de nível: {}", level);
+        try {
+            if (level == null) {
+                logger.warn("Nenhum nível de log foi especificado. Retornando logs sem filtro de nível.");
+            } else {
+                logger.info("Buscando logs. Filtro de nível: {}", level);
+            }
 
-        List<LogEntry> logs = logService.getLogs(level, startDate, endDate);
+            List<LogEntry> logs = logService.getLogs(level, startDate, endDate);
 
-        logger.info("Total de logs encontrados: {}", logs.size());
-        return ResponseEntity.ok(logs);
+            if (logs.isEmpty()) {
+                logger.warn("Nenhum log encontrado com os filtros fornecidos.");
+            } else {
+                logger.info("Total de logs encontrados: {}", logs.size());
+            }
+
+            return ResponseEntity.ok(logs);
+        } catch (Exception e) {
+            logger.error("Erro ao buscar logs: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(null);
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLog(@PathVariable UUID id) {
+    public ResponseEntity<Map<String, String>> deleteLog(@PathVariable UUID id) {
         logger.info("Requisição para deletar log com ID: {}", id);
-        logService.deleteLogById(id);
-        logger.info("Log com ID {} deletado com sucesso.", id);
-        return ResponseEntity.noContent().build();
+        Map<String, String> response = new HashMap<>();
+        try {
+            logService.deleteLogById(id);
+            logger.info("Log com ID {} deletado com sucesso.", id);
+            response.put("message", "Log com ID " + id + " deletado com sucesso.");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Log não encontrado para o ID: {}", id);
+            response.put("details", "Log não encontrado para o ID: " + id);
+            return ResponseEntity.status(404).body(response);
+        }
     }
 
 }

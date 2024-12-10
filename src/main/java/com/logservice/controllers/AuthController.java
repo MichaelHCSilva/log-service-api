@@ -1,5 +1,8 @@
 package com.logservice.controllers;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -7,9 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.logservice.requests.AuthRequest;
-import com.logservice.responses.AuthResponse;
 import com.logservice.services.CustomUserDetailsService;
 import com.logservice.services.JwtService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
@@ -24,26 +28,33 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@RequestBody AuthRequest request) {
+    public ResponseEntity<Map<String, String>> registerUser(@Valid @RequestBody AuthRequest request) {
+        Map<String, String> response = new HashMap<>();
         try {
             userDetailsService.registerUser(request.getUsername(), request.getPassword());
-            return ResponseEntity.ok("Usuário registrado com sucesso!");
+            response.put("message", "Usuário registrado com sucesso!");
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody AuthRequest request) {
+    public ResponseEntity<Map<String, Object>> loginUser(@Valid @RequestBody AuthRequest request) {
+        Map<String, Object> response = new HashMap<>();
         try {
             if (userDetailsService.authenticateUser(request.getUsername(), request.getPassword())) {
                 String token = jwtService.generateToken(request.getUsername());
-                return ResponseEntity.ok(new AuthResponse(token));
+                response.put("token", token);
+                return ResponseEntity.ok(response);
             } else {
-                return ResponseEntity.status(403).body("Credenciais inválidas!");
+                response.put("error", "Usuário não encontrado ou credenciais inválidas.");
+                return ResponseEntity.status(403).body(response);
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            response.put("error", "Erro ao realizar login. Tente novamente.");
+            return ResponseEntity.badRequest().body(response);
         }
     }
 }
