@@ -3,6 +3,7 @@ package com.logservice.controllers;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -44,17 +45,24 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> loginUser(@Valid @RequestBody AuthRequest request) {
         Map<String, Object> response = new HashMap<>();
         try {
-            if (userDetailsService.authenticateUser(request.getUsername(), request.getPassword())) {
+            // Autenticação do usuário
+            boolean isAuthenticated = userDetailsService.authenticateUser(request.getUsername(), request.getPassword());
+
+            if (isAuthenticated) {
                 String token = jwtService.generateToken(request.getUsername());
                 response.put("token", token);
                 return ResponseEntity.ok(response);
             } else {
                 response.put("error", "Usuário não encontrado ou credenciais inválidas.");
-                return ResponseEntity.status(403).body(response);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
+        } catch (IllegalArgumentException e) {
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         } catch (Exception e) {
             response.put("error", "Erro ao realizar login. Tente novamente.");
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
 }

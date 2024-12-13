@@ -6,11 +6,11 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: log-service
+      POSTGRES_DB: log_service
     ports:
       - "5433:5432"
     volumes:
-      - pg-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   logs-api:
     build:
@@ -22,7 +22,7 @@ services:
     depends_on:
       - postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/log-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-logs:5432/log_service
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: admin
 
@@ -36,15 +36,15 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_DATABASE_HOST: postgres:5432
-      GF_DATABASE_NAME: log-service
+      GF_DATABASE_HOST: postgres-logs:5432
+      GF_DATABASE_NAME: log_service
       GF_DATABASE_USER: postgres
       GF_DATABASE_PASSWORD: admin
     volumes:
-      - logs-data:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
 
 volumes:
-  pg-data:
-  logs-data:
-  
-
+  postgres_data:
+    name: postgres_log_data
+  grafana_data:
+    name: grafana_log_data

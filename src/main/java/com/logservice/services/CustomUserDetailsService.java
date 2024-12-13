@@ -71,7 +71,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         if (encodedPassword != null && passwordEncoder.matches(password, encodedPassword)) {
             logger.info("Autenticação bem-sucedida para usuário: {}", username);
-            loginAttempts.remove(username); 
+            loginAttempts.remove(username);
             return true;
         }
 
@@ -80,19 +80,11 @@ public class CustomUserDetailsService implements UserDetailsService {
         throw new IllegalArgumentException("Usuário ou senha incorretos.");
     }
 
-    /**
-     * Valida um campo genérico, como nome de usuário ou senha, verificando nulidade, vazio e limites de caracteres.
-     *
-     * @param field     O valor do campo a ser validado.
-     * @param fieldName O nome do campo para exibir em mensagens de erro.
-     * @param minLength O comprimento mínimo permitido.
-     * @param maxLength O comprimento máximo permitido.
-     */
     private void validateField(String field, String fieldName, int minLength, int maxLength) {
         if (field == null || field.isBlank()) {
-            throw new IllegalArgumentException(fieldName + " não pode ser nulo ou vazio.");
+            throw new IllegalArgumentException(fieldName + " não pode ser estar vazio.");
+        
         }
-
         if (field.length() < minLength) {
             throw new IllegalArgumentException(fieldName + " deve ter pelo menos " + minLength + " caracteres.");
         }
@@ -102,12 +94,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
     }
 
-    /**
-     * Valida os critérios de senha.
-     *
-     * @param password A senha a ser validada.
-     */
     private void validatePassword(String password) {
         validateField(password, "Senha", 6, 100);
+        if (!password.matches("^(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$%^&+=]).{6,}$")) {
+            throw new IllegalArgumentException("A senha deve conter pelo menos uma letra maiúscula, um número e um caractere especial.");
+        }
     }
 }
