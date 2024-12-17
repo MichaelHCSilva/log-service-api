@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.logservice.dtos.LogEntryDTO;
-import com.logservice.enums.LogLevel;
+import com.logservice.enums.LogNivel;
 import com.logservice.models.LogEntry;
 import com.logservice.services.LogService;
 
@@ -58,17 +58,17 @@ public class LogController {
 
     @GetMapping
     public ResponseEntity<List<LogEntry>> getLogs(
-            @RequestParam(required = false) LogLevel level,
+            @RequestParam(required = false) LogNivel nivel,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endDate) {
         try {
-            if (level == null) {
+            if (nivel == null) {
                 logger.warn("Nenhum nível de log foi especificado. Retornando logs sem filtro de nível.");
             } else {
-                logger.info("Buscando logs. Filtro de nível: {}", level);
+                logger.info("Buscando logs. Filtro de nível: {}", nivel);
             }
 
-            List<LogEntry> logs = logService.getLogs(level, startDate, endDate);
+            List<LogEntry> logs = logService.getLogs(nivel, startDate, endDate);
 
             if (logs.isEmpty()) {
                 logger.warn("Nenhum log encontrado com os filtros fornecidos.");
