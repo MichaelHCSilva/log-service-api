@@ -9,6 +9,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
@@ -39,7 +41,7 @@ public class GlobalExceptionHandler {
                             ? "unknown"
                             : invalidFormatException.getPath().get(0).getFieldName();
 
-                    if ("level".equals(fieldName)) {
+                    if ("nivel".equals(fieldName)) {
                         error.put("error", "O nível de log fornecido é inválido.");
                         error.put("details", "Use um dos valores aceitos: ERROR, DEBUG, WARNING, INFO.");
                     } else {
@@ -68,12 +70,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
         Map<String, String> error = new HashMap<>();
         error.put("error", "Erro interno no servidor.");
         error.put("details", ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String, String>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Método HTTP não permitido.");
+        error.put("details", "O método " + ex.getMethod() + " não é suportado para esta URL.");
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNotFoundException(NoHandlerFoundException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "URL não encontrada.");
+        error.put("details", "A URL " + ex.getRequestURL() + " não existe.");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 }

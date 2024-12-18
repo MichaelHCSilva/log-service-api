@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: log_service
     ports:
-        - "5432:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -36,7 +36,8 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_DATABASE_HOST: postgres-logs:5432
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: postgres-logs
       GF_DATABASE_NAME: log_service
       GF_DATABASE_USER: postgres
       GF_DATABASE_PASSWORD: admin

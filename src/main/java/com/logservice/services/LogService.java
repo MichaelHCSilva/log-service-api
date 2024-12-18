@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.logservice.dtos.LogEntryDTO;
-import com.logservice.enums.LogLevel;
+import com.logservice.enums.LogNivel;
 import com.logservice.models.LogEntry;
 import com.logservice.repositories.LogRepository;
 
@@ -25,7 +25,7 @@ public class LogService {
     public LogEntry saveLog(LogEntryDTO logEntryDTO) {
         logger.info("Iniciando o processo de salvar log...");
 
-        if (logEntryDTO.getLevel() == null) {
+        if (logEntryDTO.getNivel() == null) {
             throw new IllegalArgumentException("Nível de log é obrigatório.");
         }
 
@@ -39,9 +39,9 @@ public class LogService {
         }
 
         LogEntry log = new LogEntry();
-        log.setLevel(logEntryDTO.getLevel());
+        log.setNivel(logEntryDTO.getNivel());
         log.setMessage(logEntryDTO.getMessage());
-        logger.debug("Log básico criado com level: {} e mensagem: {}", logEntryDTO.getLevel(), logEntryDTO.getMessage());
+        logger.debug("Log básico criado com Nivel: {} e mensagem: {}", logEntryDTO.getNivel(), logEntryDTO.getMessage());
 
         if (logEntryDTO.getAdditionalData() != null) {
             log.setAdditionalData(logEntryDTO.getAdditionalData());
@@ -58,12 +58,12 @@ public class LogService {
         return savedLog;
     }
 
-    public List<LogEntry> getLogs(LogLevel level, OffsetDateTime startDate, OffsetDateTime endDate) {
-        if (level != null) {
+    public List<LogEntry> getLogs(LogNivel nivel, OffsetDateTime startDate, OffsetDateTime endDate) {
+        if (nivel != null) {
             if (startDate != null && endDate != null) {
-                return logRepository.findLogsByLevelAndDateRange(level, startDate, endDate);
+                return logRepository.findLogsByNivelAndDateRange(nivel, startDate, endDate);
             } else {
-                return logRepository.findByLevel(level);
+                return logRepository.findByNivel(nivel);
             }
         }
         if (startDate != null && endDate != null) {
