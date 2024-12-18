@@ -24,6 +24,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.logservice.dtos.LogEntryDTO;
 import com.logservice.enums.LogNivel;
+import com.logservice.exceptions.LogNotFoundException;
 import com.logservice.models.LogEntry;
 import com.logservice.services.LogService;
 
@@ -61,26 +62,17 @@ public class LogController {
             @RequestParam(required = false) LogNivel nivel,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endDate) {
-        try {
-            if (nivel == null) {
-                logger.warn("Nenhum nível de log foi especificado. Retornando logs sem filtro de nível.");
-            } else {
-                logger.info("Buscando logs. Filtro de nível: {}", nivel);
-            }
 
-            List<LogEntry> logs = logService.getLogs(nivel, startDate, endDate);
+        List<LogEntry> logs = logService.getLogs(nivel, startDate, endDate);
 
-            if (logs.isEmpty()) {
-                logger.warn("Nenhum log encontrado com os filtros fornecidos.");
-            } else {
-                logger.info("Total de logs encontrados: {}", logs.size());
-            }
-
-            return ResponseEntity.ok(logs);
-        } catch (Exception e) {
-            logger.error("Erro ao buscar logs: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(null);
+        if (logs.isEmpty()) {
+            throw new LogNotFoundException("Nenhum log encontrado para os critérios fornecidos: "
+                    + (nivel != null ? "Nível: " + nivel + " " : "")
+                    + (startDate != null ? "Data inicial: " + startDate + " " : "")
+                    + (endDate != null ? "Data final: " + endDate : ""));
         }
+
+        return ResponseEntity.ok(logs);
     }
 
     @DeleteMapping("/{id}")

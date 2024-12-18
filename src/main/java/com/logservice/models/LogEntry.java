@@ -4,7 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 
-import com.logservice.enums.LogLevel;
+import com.logservice.enums.LogNivel;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -25,7 +25,7 @@ public class LogEntry {
     private UUID id;
 
     @Enumerated(EnumType.STRING)
-    private LogLevel level;
+    private LogNivel nivel;
 
     private String message;
 
@@ -43,12 +43,12 @@ public class LogEntry {
         this.id = id;
     }
 
-    public LogLevel getLevel() {
-        return level;
+    public LogNivel getNivel() {
+        return nivel;
     }
 
-    public void setLevel(LogLevel level) {
-        this.level = level;
+    public void setNivel(LogNivel nivel) {
+        this.nivel = nivel;
     }
 
     public String getMessage() {
