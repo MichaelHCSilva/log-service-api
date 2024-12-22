@@ -11,6 +11,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: always # Reinicia automaticamente em caso de falhas
 
   logs-api:
     build:
@@ -25,27 +26,44 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-logs:5432/log_service
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: admin
+    restart: always
+    
+  grafana-db:
+    image: postgres:15
+    container_name: grafana-db
+    environment:
+      POSTGRES_USER: grafana
+      POSTGRES_PASSWORD: grafana
+      POSTGRES_DB: grafana
+    ports:
+      - "5433:5432" # Porta externa diferente para evitar conflitos com o banco da aplicação
+    volumes:
+      - grafana_db_data:/var/lib/postgresql/data
+    restart: always
 
   grafana:
     image: grafana/grafana:latest
     container_name: grafana-container
-    ports:
+    ports:  
       - "3000:3000"
     depends_on:
-      - postgres
+      - grafana-db
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_DATABASE_TYPE: postgres
-      GF_DATABASE_HOST: postgres-logs
-      GF_DATABASE_NAME: log_service
-      GF_DATABASE_USER: postgres
-      GF_DATABASE_PASSWORD: admin
+      GF_DATABASE_HOST: grafana-db:5432
+      GF_DATABASE_NAME: grafana
+      GF_DATABASE_USER: grafana
+      GF_DATABASE_PASSWORD: grafana
     volumes:
       - grafana_data:/var/lib/grafana
+    restart: always
 
 volumes:
   postgres_data:
     name: postgres_log_data
+  grafana_db_data:
+    name: grafana_db_data
   grafana_data:
     name: grafana_log_data
