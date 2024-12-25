@@ -33,7 +33,7 @@ public class LogService {
             throw new IllegalArgumentException("Mensagem de log é obrigatória.");
         }
 
-        int maxMessageSize = 10000; 
+        int maxMessageSize = Integer.parseInt(System.getenv("LOG_MAX_MESSAGE_SIZE")); // Lê do .env
         if (logEntryDTO.getMessage() != null && logEntryDTO.getMessage().length() > maxMessageSize) {
             throw new IllegalArgumentException("A mensagem de log excede o tamanho máximo permitido de " + maxMessageSize + " caracteres.");
         }
@@ -73,15 +73,8 @@ public class LogService {
     }
 
     public void deleteLogById(UUID id) {
-        logger.info("Verificando se o log com ID {} existe...", id);
-
-        if (!logRepository.existsById(id)) {
-            logger.error("Log com ID {} não encontrado.", id);
-            throw new IllegalArgumentException("Log não encontrado para o ID: " + id);
-        }
-
+        logger.info("Deletando log com ID: {}", id);
         logRepository.deleteById(id);
-        logger.info("Log com ID {} removido do banco de dados.", id);
+        logger.info("Log com ID: {} deletado com sucesso", id);
     }
-
 }

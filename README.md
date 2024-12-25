@@ -109,7 +109,8 @@ Antes de começar, certifique-se de ter as seguintes ferramentas instaladas:
 4.  **Inicie o servidor Spring Boot:**
 
     ```
-    ./mvnw spring-boot:run
+      mvn spring-boot:run
+
     ```
 
 5.  **Acesse a API no navegador ou Postman:**
@@ -173,8 +174,6 @@ Antes de começar, certifique-se de ter as seguintes ferramentas instaladas:
     }
     ```
 
-2.  Outros exemplos disponíveis aqui.
-
 #### **Consultar Logs por Nível**
 
 - **URL:** `GET /logs?nivel=ERROR`
@@ -215,11 +214,3 @@ Antes de começar, certifique-se de ter as seguintes ferramentas instaladas:
 
 ---
 
-## **Exemplos de Logs**
-
-- **Log de Erro:** Detalhes aqui
-- **Log de Status**
-- **Log de Ação do Usuário**
-- **Log de Depuração**
-
----

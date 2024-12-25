@@ -3,40 +3,47 @@ services:
   postgres:
     image: postgres:15
     container_name: postgres-logs
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: log_service
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: always # Reinicia automaticamente em caso de falhas
+    restart: always
 
   logs-api:
     build:
       context: .
       dockerfile: Dockerfile
+    image: logs-api-service:latest
     container_name: logs-api-container
     ports:
-      - "8080:8080"
+      - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
       - postgres
+    env_file:
+      - .env
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-logs:5432/log_service
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: admin
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
     restart: always
-    
+
   grafana-db:
     image: postgres:15
     container_name: grafana-db
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: grafana
-      POSTGRES_PASSWORD: grafana
-      POSTGRES_DB: grafana
+      POSTGRES_USER: ${GRAFANA_DB_USER}
+      POSTGRES_PASSWORD: ${GRAFANA_DB_PASSWORD}
+      POSTGRES_DB: ${GRAFANA_DB_NAME}
     ports:
-      - "5433:5432" # Porta externa diferente para evitar conflitos com o banco da aplicação
+      - "${GRAFANA_DB_PORT}:5432"
     volumes:
       - grafana_db_data:/var/lib/postgresql/data
     restart: always
@@ -44,18 +51,20 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana-container
-    ports:  
+    ports:
       - "3000:3000"
     depends_on:
       - grafana-db
+    env_file:
+      - .env
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
       GF_DATABASE_TYPE: postgres
       GF_DATABASE_HOST: grafana-db:5432
-      GF_DATABASE_NAME: grafana
-      GF_DATABASE_USER: grafana
-      GF_DATABASE_PASSWORD: grafana
+      GF_DATABASE_NAME: ${GRAFANA_DB_NAME}
+      GF_DATABASE_USER: ${GRAFANA_DB_USER}
+      GF_DATABASE_PASSWORD: ${GRAFANA_DB_PASSWORD}
     volumes:
       - grafana_data:/var/lib/grafana
     restart: always

@@ -34,11 +34,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, java.io.IOException {
 
-        String authorizationHeader = request.getHeader("Authorization");
-        log.info("Cabeçalho de autorização recebido: {}", authorizationHeader);
+        String authorizationHeader = request.getHeader("Authorization"); // Header fixo
+        log.info("Authorization header received: {}", authorizationHeader);
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            log.warn("Cabeçalho de autorização ausente ou inválido");
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) { // Prefixo fixo
+            log.warn("Authorization header is missing or invalid");
             filterChain.doFilter(request, response);
             return;
         }
@@ -47,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String username = jwtService.extractUsername(token);
-            log.info("Token validado para usuário: {}", username);
+            log.info("Token validated for user: {}", username);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -57,13 +57,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    log.info("Autenticação bem-sucedida para: {}", username);
+                    log.info("Authentication successful for: {}", username);
                 } else {
-                    log.warn("Falha na validação do token");
+                    log.warn("Token validation failed");
                 }
             }
         } catch (JwtException e) {
-            log.error("Erro ao validar o token JWT: {}", e.getMessage(), e);
+            log.error("Error validating JWT token: {}", e.getMessage(), e);
         }
 
         filterChain.doFilter(request, response);

@@ -22,16 +22,28 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimitingFilter.class);
 
-    private static final long MAX_REQUESTS = 5;
-    private static final Duration REFILL_DURATION = Duration.ofMinutes(1);
-    private final ConcurrentMap<String, Bucket> buckets = new ConcurrentHashMap<>();
+    // Configurações para endpoints gerais
+    private static final long MAX_REQUESTS_GLOBAL = Long.parseLong(System.getenv("MAX_REQUESTS_GLOBAL"));
+    private static final Duration REFILL_DURATION_GLOBAL = Duration.ofMinutes(Long.parseLong(System.getenv("REFILL_DURATION_MINUTES_GLOBAL")));
 
-    private Bucket resolveBucket(String ipAddress) {
-        return buckets.computeIfAbsent(ipAddress, k
-                -> Bucket.builder()
-                        .addLimit(Bandwidth.classic(MAX_REQUESTS, Refill.intervally(MAX_REQUESTS, REFILL_DURATION)))
-                        .build()
-        );
+    // Configurações específicas para login
+    private static final long MAX_LOGIN_REQUESTS = Long.parseLong(System.getenv("MAX_LOGIN_REQUESTS"));
+    private static final Duration REFILL_DURATION_LOGIN = Duration.ofMinutes(Long.parseLong(System.getenv("REFILL_DURATION_MINUTES_LOGIN")));
+
+    // Mapas para armazenar os buckets
+    private final ConcurrentMap<String, Bucket> globalBuckets = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Bucket> loginBuckets = new ConcurrentHashMap<>();
+
+    private Bucket resolveBucket(String ipAddress, boolean isLoginRequest) {
+        if (isLoginRequest) {
+            return loginBuckets.computeIfAbsent(ipAddress, ip -> Bucket.builder()
+                    .addLimit(Bandwidth.classic(MAX_LOGIN_REQUESTS, Refill.intervally(MAX_LOGIN_REQUESTS, REFILL_DURATION_LOGIN)))
+                    .build());
+        } else {
+            return globalBuckets.computeIfAbsent(ipAddress, ip -> Bucket.builder()
+                    .addLimit(Bandwidth.classic(MAX_REQUESTS_GLOBAL, Refill.intervally(MAX_REQUESTS_GLOBAL, REFILL_DURATION_GLOBAL)))
+                    .build());
+        }
     }
 
     @Override
@@ -39,21 +51,23 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             throws ServletException, java.io.IOException {
 
         String clientIp = request.getRemoteAddr();
-        log.info("Requisição recebida de IP: {}", clientIp);
+        String path = request.getRequestURI();
+        boolean isLoginRequest = path.equalsIgnoreCase("/login"); // Verifica se é requisição de login
 
-        Bucket bucket = resolveBucket(clientIp);
+        log.info("Requisição recebida de IP: {} para o endpoint: {}", clientIp, path);
+
+        Bucket bucket = resolveBucket(clientIp, isLoginRequest);
 
         if (bucket.tryConsume(1)) {
-            long remainingTokens = bucket.getAvailableTokens();
-            log.info("Requisição permitida para IP: {}. Requisições restantes: {}", clientIp, remainingTokens);
+            log.info("Requisição permitida para IP: {}. Tokens restantes: {}", clientIp, bucket.getAvailableTokens());
             filterChain.doFilter(request, response);
         } else {
-            long waitTimeMillis = REFILL_DURATION.toMillis();
-            log.warn("Limite de requisições atingido para IP: {}. Tempo de espera estimado: {} ms.", clientIp, waitTimeMillis);
+            long waitTimeMillis = (isLoginRequest ? REFILL_DURATION_LOGIN : REFILL_DURATION_GLOBAL).toMillis();
+            log.warn("Limite atingido para IP: {} no endpoint: {}. Tempo de espera: {} ms.", clientIp, path, waitTimeMillis);
 
             response.setStatus(429);
             response.setContentType("application/json");
-            response.getWriter().write("{\"erro\": \"Limite de requisições atingido. Por favor, aguarde " + waitTimeMillis + " ms antes de tentar novamente.\"}");
+            response.getWriter().write("{\"erro\": \"Limite de requisições atingido. Aguarde " + waitTimeMillis + " ms.\"}");
             response.getWriter().flush();
         }
     }

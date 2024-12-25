@@ -16,8 +16,8 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "your-256-bit-secret-your-256-bit-secret"; 
-    private static final long EXPIRATION_TIME = 86400000; 
+    private static final String SECRET_KEY = System.getenv("JWT_SECRET_KEY"); // Do env
+    private static final long EXPIRATION_TIME = Long.parseLong(System.getenv("JWT_EXPIRATION_TIME")); // Do env
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
