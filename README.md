@@ -14,8 +14,6 @@ Este projeto é uma API REST para gerenciamento de usuários e registro de logs 
   - [Autenticação](#autenticação)
   - [Gerenciamento de Logs](#gerenciamento-de-logs)
 - [Configuração do Grafana](#configuração-do-grafana)
-- [Contribuições](#contribuições)
-- [Licença](#licença)
 
 ---
 
@@ -103,8 +101,8 @@ Certifique-se de ter instalado:
 - **Body (JSON)**:
   ```json
   {
-    "username": "michael",
-    "password": "1234@Michael"
+    "username": "username",
+    "password": "password"
   }
   ```
 
@@ -113,8 +111,8 @@ Certifique-se de ter instalado:
 - **Body (JSON)**:
   ```json
   {
-    "username": "michael",
-    "password": "1234@Michael"
+    "username": "username",
+    "password": "password"
   }
   ```
 - **Resposta de Sucesso**:
