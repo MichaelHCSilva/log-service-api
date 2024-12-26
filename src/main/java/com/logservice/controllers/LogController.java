@@ -78,17 +78,13 @@ public class LogController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteLog(@PathVariable UUID id) {
         logger.info("Requisição para deletar log com ID: {}", id);
-        Map<String, String> response = new HashMap<>();
-        try {
-            logService.deleteLogById(id);
-            logger.info("Log com ID {} deletado com sucesso.", id);
-            response.put("message", "Log com ID " + id + " deletado com sucesso.");
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            logger.warn("Log não encontrado para o ID: {}", id);
-            response.put("details", "Log não encontrado para o ID: " + id);
-            return ResponseEntity.status(404).body(response);
-        }
-    }
 
+        logService.deleteLogById(id);  // Esse método pode lançar uma IllegalArgumentException, que será tratada globalmente
+
+        logger.info("Log com ID {} deletado com sucesso.", id);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Log com ID " + id + " deletado com sucesso.");
+        return ResponseEntity.ok(response);
+    }
 }

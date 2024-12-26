@@ -6,10 +6,10 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
         Map<String, String> error = new HashMap<>();
         Throwable cause = ex.getCause();
 
-        if (cause != null) {
+        try {
             switch (cause) {
                 case InvalidFormatException invalidFormatException -> {
                     String fieldName = invalidFormatException.getPath().isEmpty()
@@ -58,15 +58,24 @@ public class GlobalExceptionHandler {
                     error.put("details", "O campo '" + fieldName + "' pode estar vazio ou inválido.");
                 }
                 default -> {
+                    String causeMessage = (cause != null && cause.getMessage() != null) ? cause.getMessage() : "Erro desconhecido";
                     error.put("error", "Erro ao processar o JSON enviado.");
-                    error.put("details", cause.getMessage());
+                    error.put("details", causeMessage);
                 }
             }
-        } else {
+        } catch (Exception e) {
             error.put("error", "Erro ao processar o JSON enviado.");
-            error.put("details", ex.getMessage());
+            error.put("details", "Ocorreu um erro inesperado durante o tratamento: " + (e.getMessage() != null ? e.getMessage() : "Erro desconhecido"));
         }
 
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Erro de validação.");
+        error.put("details", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
@@ -74,7 +83,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
         Map<String, String> error = new HashMap<>();
         error.put("error", "Erro interno no servidor.");
-        error.put("details", ex.getMessage());
+        error.put("details", (ex.getMessage() != null ? ex.getMessage() : "Erro desconhecido"));
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
@@ -93,4 +102,6 @@ public class GlobalExceptionHandler {
         error.put("details", "A URL " + ex.getRequestURL() + " não existe.");
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
+
+    
 }

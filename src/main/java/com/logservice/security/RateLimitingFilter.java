@@ -1,6 +1,6 @@
 package com.logservice.security;
 
-import java.time.Duration;
+import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -17,57 +17,59 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import com.logservice.config.RateLimitingConfig;
+
 @Component
 public class RateLimitingFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimitingFilter.class);
 
-    // Configurações para endpoints gerais
-    private static final long MAX_REQUESTS_GLOBAL = Long.parseLong(System.getenv("MAX_REQUESTS_GLOBAL"));
-    private static final Duration REFILL_DURATION_GLOBAL = Duration.ofMinutes(Long.parseLong(System.getenv("REFILL_DURATION_MINUTES_GLOBAL")));
-
-    // Configurações específicas para login
-    private static final long MAX_LOGIN_REQUESTS = Long.parseLong(System.getenv("MAX_LOGIN_REQUESTS"));
-    private static final Duration REFILL_DURATION_LOGIN = Duration.ofMinutes(Long.parseLong(System.getenv("REFILL_DURATION_MINUTES_LOGIN")));
-
-    // Mapas para armazenar os buckets
     private final ConcurrentMap<String, Bucket> globalBuckets = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Bucket> loginBuckets = new ConcurrentHashMap<>();
 
     private Bucket resolveBucket(String ipAddress, boolean isLoginRequest) {
         if (isLoginRequest) {
             return loginBuckets.computeIfAbsent(ipAddress, ip -> Bucket.builder()
-                    .addLimit(Bandwidth.classic(MAX_LOGIN_REQUESTS, Refill.intervally(MAX_LOGIN_REQUESTS, REFILL_DURATION_LOGIN)))
+                    .addLimit(Bandwidth.classic(RateLimitingConfig.MAX_LOGIN_REQUESTS, Refill.intervally(RateLimitingConfig.MAX_LOGIN_REQUESTS, RateLimitingConfig.REFILL_DURATION_LOGIN)))
                     .build());
         } else {
             return globalBuckets.computeIfAbsent(ipAddress, ip -> Bucket.builder()
-                    .addLimit(Bandwidth.classic(MAX_REQUESTS_GLOBAL, Refill.intervally(MAX_REQUESTS_GLOBAL, REFILL_DURATION_GLOBAL)))
+                    .addLimit(Bandwidth.classic(RateLimitingConfig.MAX_REQUESTS_GLOBAL, Refill.intervally(RateLimitingConfig.MAX_REQUESTS_GLOBAL, RateLimitingConfig.REFILL_DURATION_GLOBAL)))
                     .build());
         }
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, java.io.IOException {
+            throws ServletException, IOException {
 
         String clientIp = request.getRemoteAddr();
         String path = request.getRequestURI();
-        boolean isLoginRequest = path.equalsIgnoreCase("/login"); // Verifica se é requisição de login
+        boolean isLoginRequest = path.equalsIgnoreCase("/login");
 
-        log.info("Requisição recebida de IP: {} para o endpoint: {}", clientIp, path);
+        try {
+            log.info("Requisição recebida de IP: {} para o endpoint: {}", clientIp, path);
 
-        Bucket bucket = resolveBucket(clientIp, isLoginRequest);
+            Bucket bucket = resolveBucket(clientIp, isLoginRequest);
 
-        if (bucket.tryConsume(1)) {
-            log.info("Requisição permitida para IP: {}. Tokens restantes: {}", clientIp, bucket.getAvailableTokens());
-            filterChain.doFilter(request, response);
-        } else {
-            long waitTimeMillis = (isLoginRequest ? REFILL_DURATION_LOGIN : REFILL_DURATION_GLOBAL).toMillis();
-            log.warn("Limite atingido para IP: {} no endpoint: {}. Tempo de espera: {} ms.", clientIp, path, waitTimeMillis);
+            if (bucket.tryConsume(1)) {
+                log.info("Requisição permitida para IP: {}. Tokens restantes: {}", clientIp, bucket.getAvailableTokens());
+                filterChain.doFilter(request, response);
+            } else {
+                long waitTimeMillis = (isLoginRequest ? RateLimitingConfig.REFILL_DURATION_LOGIN : RateLimitingConfig.REFILL_DURATION_GLOBAL).toMillis();
+                log.warn("Limite atingido para IP: {} no endpoint: {}. Tempo de espera: {} ms.", clientIp, path, waitTimeMillis);
 
-            response.setStatus(429);
+                response.setStatus(429);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"erro\": \"Limite de requisições atingido. Aguarde " + waitTimeMillis + " ms.\"}");
+                response.getWriter().flush();
+            }
+        } catch (IOException | ServletException e) {
+            log.error("Erro ao processar a requisição de IP: {} para o endpoint: {}. Detalhes: {}", clientIp, path, e.getMessage(), e);
+
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json");
-            response.getWriter().write("{\"erro\": \"Limite de requisições atingido. Aguarde " + waitTimeMillis + " ms.\"}");
+            response.getWriter().write("{\"error\": \"Erro interno no servidor.\"}");
             response.getWriter().flush();
         }
     }

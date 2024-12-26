@@ -33,28 +33,22 @@ public class LogService {
             throw new IllegalArgumentException("Mensagem de log é obrigatória.");
         }
 
-        int maxMessageSize = Integer.parseInt(System.getenv("LOG_MAX_MESSAGE_SIZE")); // Lê do .env
-        if (logEntryDTO.getMessage() != null && logEntryDTO.getMessage().length() > maxMessageSize) {
-            throw new IllegalArgumentException("A mensagem de log excede o tamanho máximo permitido de " + maxMessageSize + " caracteres.");
+        int maxMessageSize = Integer.parseInt(System.getenv("LOG_MAX_MESSAGE_SIZE"));
+        if (logEntryDTO.getMessage().length() > maxMessageSize) {
+            throw new IllegalArgumentException("A mensagem de log excede o tamanho máximo permitido.");
         }
 
         LogEntry log = new LogEntry();
         log.setNivel(logEntryDTO.getNivel());
         log.setMessage(logEntryDTO.getMessage());
-        logger.debug("Log básico criado com Nivel: {} e mensagem: {}", logEntryDTO.getNivel(), logEntryDTO.getMessage());
 
         if (logEntryDTO.getAdditionalData() != null) {
             log.setAdditionalData(logEntryDTO.getAdditionalData());
-            logger.debug("Dados adicionais atribuídos: {}", logEntryDTO.getAdditionalData());
-        } else {
-            logger.debug("Nenhum dado adicional fornecido.");
         }
 
         log.setTimestamp(OffsetDateTime.now());
-        logger.info("Timestamp gerado automaticamente: {}", log.getTimestamp());
 
         LogEntry savedLog = logRepository.save(log);
-        logger.info("Log salvo com sucesso no banco de dados. ID: {}", savedLog.getId());
         return savedLog;
     }
 
@@ -73,8 +67,6 @@ public class LogService {
     }
 
     public void deleteLogById(UUID id) {
-        logger.info("Deletando log com ID: {}", id);
         logRepository.deleteById(id);
-        logger.info("Log com ID: {} deletado com sucesso", id);
     }
 }

@@ -33,18 +33,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, java.io.IOException {
-
-        String authorizationHeader = request.getHeader("Authorization"); // Header fixo
+        
+        String authorizationHeader = request.getHeader("Authorization"); 
         log.info("Authorization header received: {}", authorizationHeader);
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) { // Prefixo fixo
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) { 
             log.warn("Authorization header is missing or invalid");
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = authorizationHeader.substring(7);
-
         try {
             String username = jwtService.extractUsername(token);
             log.info("Token validated for user: {}", username);
@@ -64,6 +63,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (JwtException e) {
             log.error("Error validating JWT token: {}", e.getMessage(), e);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Token inválido ou expirado.\"}");
+            response.getWriter().flush();
+            return; // Não continuar com o filtro se o token for inválido
         }
 
         filterChain.doFilter(request, response);
